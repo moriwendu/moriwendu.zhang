@@ -1,0 +1,535 @@
+监控系统
+
+    监控需要周期性的采集-->采集到的结果进行存储-->如有出现不合理数据拥有报警（告警）-->展示
+
+    采集（采样）：主机
+        系统指标：CPU , MEMORY , IO(Disk,Network)
+
+	    SNMP,   server/agent
+	    IPMI 硬件级数据采集
+	    jmx : 获取到使用内部资源数据  
+
+        Agentless Monitoring
+        Web Monitoring
+        Database Monitoring
+        Internal Check
+        Calculated Monitoring
+
+
+
+
+
+	存储：          
+	    TPS：每秒事务数
+	    QPS：每秒查询率
+
+	    rrd -- round-robin database (轮询数据)
+	        轮转着把收集到的数据进行覆盖存储  （规定一定的规格，然后进行轮转存储，当达到规格容量后，进行覆盖存储）
+        
+        influxDB （时间型数据库）
+
+    告警：
+        微信告警
+        邮件告警
+
+    展示：
+        web页面展示
+
+
+    监控系统有：
+        Nagios: 告警系统
+        Cacti:Crom+SNMP+MySQL 展示警系
+        Zabbix:
+            数据采样：agent,SNMP,IPMI,JMX
+            数据存储：MySQL,PGSQL
+            告警    ：Email,Script(短信，微信)
+                告警升级：层次的向上进行告警----   运维工程师-->运维主管-->运维经理...
+            展示    ：简单图，图形，screen，slide show,map
+                简单图，一个图型上只展示一个指标    
+                map，进行颜色展示
+                grafana： 展示第三方接口
+
+                statsd+influxdb+grafana
+                promethues+grafana
+                graphite+grafana
+
+                LTS:长期维护版
+
+
+        Zabbix
+            zabbix_sender: 客户端测试工具
+            zabbix_get   ：服务器测试工具
+
+            常用术语：
+                Host       ：主机
+                Host group ：主机组   （Maintenance 定义自定义的操作不被记录）
+                item       ：监控项
+                trigger    ：触发器 （当数据不在合理状态时，状态转为Problem）
+                event      : 事件
+                action     ：动作
+                escalation : 报警升级
+                media      : 媒介
+                notification: 通告
+                remote command : 远程命令
+                template   ：模板
+                application：应用程序
+                web scennario：web场景
+                frontend   ：前端
+
+        监控配置：
+            术语： host groups -->  host  -->  application  -->  item  -->  trigger  -->  action (conditions,operations)  
+                       graph:
+                       simple:每个item定义完成后自动生成
+                       customed:用于将多个item的数据整合于一个图形中展示
+
+            items: key+parameter
+                key:    （如果有内建KEY尽量使用内建KEY）
+                    zabbix内建：
+                        type:
+                            agent (server:pull)
+                            agent (Active)(agent:push)
+                            snmp v1
+                            ...
+                    用户自定义：（UserParameter)
+
+                采集到的数据类型：
+                    数值：
+                        整数
+                        浮点数
+                    字符串：
+                        字符串
+                        文本
+
+                存储的值:
+                    As is :
+                    Delta :
+                    Delta : 
+
+            trigger:
+                界定某特定的item采集到的数据的非合理区间或非合理状态：逻辑表达式
+
+                逻辑表达式，阈值：通常用于定义数据的不合理区间；
+                    OK：正常  较老牌本为FALSE;
+                    PROBLEM： 非正常 较老版本为TRUE；
+
+                    OK  -->  PROBLEM
+                    Recovery: PROBLEM --> OK
+
+                触发器存在可调用的函数：
+                    nodata()
+                    last()
+                    data() 
+                    time()
+                    now()                           
+            Media:媒介
+                告警信息的传递通道；
+                类型：
+                    Email
+                    Script
+                    SMS:短信
+                    jabber:及时聊天工具，大陆不适用
+                    Ez Texting：商业工具
+
+            安装： yum install zabbix-releaset  安装zabbix  yum安装源（自动在yum仓库里添加一个zabbix源包代码） 
+            
+                首先安装mysql     然后配置 #vim /etc/my.cnf.d/server.cnf
+                                            skip_name_resolve = ON
+                                            innodb_file_per_table = On
+                                            innodb_buffer_pool_size = 256M
+                                            max_connections = 2000
+
+                                            mysql> CREATE DATABASE zabbixdb CHARACTER SET 'utf8';
+                                            mysql> GRANT ALL ON zabbixdb.* TO 'zabbix'@'10.%' IDENTIFIED BY 'zabbixpasswd';
+                                            mysql> FLUSH PRIVILEGES;
+                                        
+                                        rpm -ql zabbix-server
+
+                                            #mysql -uzabbix -h10.10.10.10 -pzabbix zabbixdb < zabbix.sql
+
+        安装：
+            1.  ntpdata 172.18.0.1
+                下载 wget http://repo.zabbix.com/zabbix/3.4/rhel/7/x86_64/zabbix-release-3.4-2.el7.noarch.rpm 
+                rpm -ivh zabbix-release-3.4-2.el7.noarch.rpm
+
+            2.  安装mysql 并配置配置文件 vim /etc/my.cnf.d/server.cnf   
+                 在[server]项下添加
+                    skip_name_resolve = ON
+                    innodb_file_per_table = ON
+                    innodb_buffer_pool_size = 256
+                    max_connections = 200
+
+                然后初使化下mysql 配置 mysql_secure_installation    
+            
+            3.  [root@zabbix ~]# yum install zabbix-server-mysql zabbix-web zabbix-web-mysql zabbix-agent zabbix-get zabbix-sender
+                 事先安装zabbix  装好后需要配置mysql的配置进入mysql
+                 MariaDB [(none)]> CREATE DATABASE zabbixdb CHARACTER SET 'utf8';
+                 MariaDB [(none)]> GRANT ALL ON zabbixdb.* TO 'zabbix'@'192.168.3.%' IDENTIFIED BY 'zabbix';
+                 MariaDB [(none)]> FLUSH PRIVILEGES;
+                创建好后退出mysql
+				
+				然后在/etc/httpd/conf/conf.d/zabbix.conf  这个文档里做好定义
+
+            4.mysql 的格式导入 
+                [root@zabbix ~]# rpm -ql zabbix-server-mysql  
+                 /usr/share/doc/zabbix-server-mysql-3.4.4/create.sql.gz
+                 
+                [root@zabbix ~]# cp /usr/share/doc/zabbix-server-mysql-3.4.4/create.sql.gz .
+                [root@zabbix ~]# gzip -d create.sql.gz 
+                [root@zabbix ~]# ls
+                anaconda-ks.cfg  Desktop    Downloads  original-ks.cfg  Public     Videos
+                create.sql       Documents  Music      Pictures         Templates 
+
+                [root@zabbix ~]# mysql -uzabbix -h192.168.3.10 -pzabbix zabbixdb < create.sql     --> 把create.sql表导入至mysql数据库中
+                进入mysql
+                MariaDB [(none)]> use zabbixdb;
+                MariaDB [zabbixdb]> SHOW TABLES;      --> 查看表是否导入成功。如果OK继续下项操作
+
+            5.  先把配置文件备份 [root@zabbix ~]#cp /etc/zabbix/zabbix_server.conf{,.bak}
+                配置zabbix的配置文档  /etc/zabbix/zabbix_server.conf      
+                在 ############ GENERAL PARAMETERS #################  项里配置
+                    # ListenPort=10051     监听的端口可以开启或不开启，不开启表示默认的10051端口
+                    SourceIP=192.168.3.10  源IP填上对外公布的IP
+                    LogFileSize=0          这表示日志滚动，建意开启为1
+                    
+                    DBHost=192.168.3.10    填上mysql的配置
+                    DBName=zabbixdb
+                    DBUser=zabbix
+                    DBPassword=zabbix
+                    DBPort=3306
+
+            6.  进行zabbix的启动然后配置 systemctl start zabbix-server.service     
+
+                  时区修改： rpm -ql zabbix-web 包里可以查看到安装的包里生成了很多文件，在/etc/httpd/conf.d/ 下也生成了一个zabbix.conf的文件
+                  查看这个文件， 其中在mod_php5.c的模块下有个#号php_value date.timezone Europe/riga 的项 打上了注释号，因为这是设置时间区的
+                  因为要统一时间区，   要不在httpd/conf.d/zabbix.conf的配置文件里改要不就在 /etc/php.ini 里找 [Data] 下的 date.timezone 
+                                 /etc/httpd/conf.d/zabbix.conf
+                                    php_value date.timezone Asia/Shanghai
+                                 /etc/php.ini
+                                    date.timezone = Asia/Shanghai
+
+                  然后启用httpd
+                      systemctl start httpd.service
+
+            7.  进入zabbix页面，需要做初使化配置  http://192.168.3.10/zabbix     
+             
+              Configure DB connection:
+                 Database type   mysql
+                 Database host   192.168.3.10
+                 Database port   0（表示默认3306）
+                 Database name   zabbixdb
+                 User            zabbix
+                 password        zabbix
+
+              Zabbix server details
+                 HOST  192.168.3.10
+                 Port  10051
+                 Name  zabbix-server
+                              ####这项真不真都无所谓####     
+
+              当你都填好后下一步会告诉你你所配置的默认项放置在 /etc/zabbix/web/zabbix.conf.php里 到时候有需要改动的在这里面直接修改及可    
+                  登陆zabbix    (这里的账号密码是默认的)
+                      账号：admin
+                      密码：zabbix
+            
+        添加监控主机步骤：
+            
+            1.  ntpdata 172.18.0.1
+                下载 wget http://repo.zabbix.com/zabbix/3.4/rhel/7/x86_64/zabbix-release-3.4-2.el7.noarch.rpm 
+                rpm -ivh zabbix-release-3.4-2.el7.noarch.rpm     (安装yum源仓库)
+
+            2. [root@host1 ~]# yum install zabbix-agent zabbix-sender      安装agent
+
+            3. [root@host1 zabbix]# cp zabbix_agentd.conf{,.bak}
+                   vim zabbix_agentd.conf
+                     ##### Passive checks related  
+                       Server=192.168.3.10
+                       ListenPort=10050
+                       ListenIP=192.168.3.11
+                       StartAgents=3
+                     ##### Active checks related
+                       ServerActive=192.168.3.10 
+                       Hostname=192.168.3.11         (被监控的主机名，可以填上主机名) 
+
+                [root@host1 zabbix]# systemctl start zabbix-agent.service     启动agent服务
+
+            4.  在web上添加被监控的主机进zabbix
+                    在configuration -- hosts   右上角create hosts   里添加主机
+                        Host name            192.168.3.11
+                        Visible name         test
+                        Groups In groups     （添加组，如果想要自己添加一个组事先去Host groups 里创建一个组，或下面New group里创建新组）
+                        Agent interfaces     192.168.3.11     (因为我们用的是agent所以选择agent 如果是snmp jmx ipmi的则add这些先项)
+                        Monitored by proxy   no proxy     （因为没有分布式监控，所以不启用代理）
+
+                        填好后 add添加
+
+            5.  在网页配置里选择host进行添加
+            
+            6.  设定监控项
+
+            7.  设定触发器
+
+            8.  触发后执行的命令    
+
+        邮件发送的定义：   (如果是脚本就选脚本，微信一般是自定义的脚本)
+            事先在administration里添加需要的Media types 类型
+                Name                   Local_Email
+                Type                   Email
+                SMTP server            localhost
+                SMTP server port       25
+                SMTP helo              localhost
+                SMTP email             zabbix@localhost
+                connection security    None
+                Authentication         None
+                Enabled                √
+            
+            然后在users里定义哪个用户接收出件 。   如是admin 点击进入admin 选择media add添加
+                Type                   Local_Email
+                Send to                root@localhost
+                when active            默认
+                use if severity        对应的报警级别打√
+                Enabled                √
+
+
+        监听Redis 如果出现服务停止，我们让监控自动启动Redis
+
+            1.先在zabbix里添加Redis的item
+               新建一个Redis_listen的item 
+                   Name             Redis_listen
+                   Type             Zabbix agent
+                   Key              net.tcp.port[HOST.IP,HOST.PORT]   (HOST.IP和PORT是内嵌的变量IP的PORT )
+                   ...
+
+            2.在hosts 里添加一个Redis_Tringgers的报警触发器
+                   Name             Redis_triggers
+                   Severity         Warning       
+                   Expression       {192.168.3.11:net.tcp.port[HOST.IP,HOST.PORT].last(2)}=0
+                       # 我们服务器里使用zabbix_get -s 192.168.3.11 -p 10050 -k "net.tcp.port[192.168.3.11,6379]"  来测试这个Key是否可用
+
+        微信告警脚本：
+[root@zabbix alertscripts]# cat weixin.py
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import urllib,urllib2,json
+import sys
+reload(sys)
+sys.setdefaultencoding( "utf-8" )
+
+
+class WeChat(object):
+        __token_id = ''
+        # init attribute
+        def __init__(self,url):
+                self.__url = url.rstrip('/')
+                self.__corpid = 'wx2235b5c487a14094'        #这里需要修改
+                self.__secret = 'nP5PGFbVdwEGk7b3P_pBAEt_nEyRQiMfhYcpMD6O75I'     #这里需要修改
+
+
+        # Get TokenID
+        def authID(self):
+                params = {'corpid':self.__corpid, 'corpsecret':self.__secret}
+                data = urllib.urlencode(params)
+
+
+                content = self.getToken(data)
+
+
+                try:
+                        self.__token_id = content['access_token']
+                        # print content['access_token']
+                except KeyError:
+                        raise KeyError
+
+
+        # Establish a connection
+        def getToken(self,data,url_prefix='/'):
+                url = self.__url + url_prefix + 'gettoken?'
+                try:
+                        response = urllib2.Request(url + data)
+                except KeyError:
+                        raise KeyError
+                result = urllib2.urlopen(response)
+                content = json.loads(result.read())
+                return content
+
+
+        # Get sendmessage url
+        def postData(self,data,url_prefix='/'):
+                url = self.__url + url_prefix + 'message/send?access_token=%s' % self.__token_id
+                request = urllib2.Request(url,data)
+                try:
+                        result = urllib2.urlopen(request)
+                except urllib2.HTTPError as e:
+                        if hasattr(e,'reason'):
+                                print 'reason',e.reason
+                        elif hasattr(e,'code'):
+                                print 'code',e.code
+                        return 0
+                else:
+                        content = json.loads(result.read())
+                        result.close()
+                return content
+
+
+        # send message
+        def sendMessage(self,touser,message):
+
+
+                self.authID()
+
+
+                data = json.dumps({
+                        'touser':touser,
+                        'toparty':"1",            #这里需要修改
+                        'msgtype':"text",
+                        'agentid':"1",            #这里需要修改
+                        'text':{
+                                'content':message
+                        },
+                        'safe':"0"
+                },ensure_ascii=False)
+
+
+                response = self.postData(data)
+                print response
+
+
+
+
+if __name__ == '__main__':
+        a = WeChat('https://qyapi.weixin.qq.com/cgi-bin')
+        a.sendMessage(sys.argv[1],sys.argv[3])               
+
+                  Actions 里的ActionOperationsRecovery operationsAcknowledgement operations  分别含义
+                      Action 定义触发此操作的参数
+                      Operations  定义触发后执行的操作
+                      Recovery operations  定义恢复后的操作
+                      Acknowledgement operations  定义事件被我们确认后的操作（就是监控器页面显示的未确认，确认）
+
+                  添加微信脚本的步骤：
+                      1. 
+                        事先把脚本文件创建好，放至/usr/lib/zabbix/alertscripts 下取名weixin.py （因为是用python开发的）
+                      2. 
+                        在Administration -- Media types    里create media type 
+                             Name                            weixin
+                             Type                            script
+                             Script name                     weixin.py
+                             Script parameters
+                                                             {ALERT.SENDTO}
+                                                             {ALERT.SUBJECT}
+                                                             {ALERT.MESSAGE}
+
+                      3. 
+                        在Administration -- Users -- Admin --Media 添加admin接收微信信息
+                            Type                             weixin
+                            Send to                          @all
+                            When active                      默认
+                            其余默认....
+
+            宏：Macro
+                级别
+                    全局：Administration --> General --> Macrons
+                    模板：编辑模板 --> Macrons
+                    主机：编辑主机 --> Macrons
+
+                类型 
+                    内建  ：  {MACRO_NAME}
+                    自定义：  {$MACRO_NAME}
+                        命名方式：大写字母、数字和下划线;
+                      
+                      比如： key 使用的变量 ip.tcp.port[{$MACRO_NAME}]    #(这是使用的自定义变量)
+                             key  ip.tcp.port[{MACRO_NAME}]               #(这是使用的系统内建变量)
+
+            自定义key：
+                在被监控的主机上定义需要的key     
+                  两种方法：
+                      1.编辑agent配置文件 :  /etc/zabbix/zabbix_agentsd.conf     
+                          在里面添加一行定义的自定义键      UserParameter=memory.used,free -m | awk '/^Mem/{print $3}'
+                          定义好后需要重启，然后在服务端测试  zabbix_get -s 192.168.3.11 -p 10050 -k "memory.used"
+                      
+                      2.在 /etc/zabbix/zabbix_agentd.d/   下创建个文件  vim memory_used.conf
+                          在里面填上一行 UserParameter=memory.used,free -m | awk '/^Mem/{print $3}'
+                          定义好后重启zabbix-agent服务 测试key 在服务器端 zabbix_get -s 192.168.3.11 -p 10050 -k "memory.used"
+
+                数组型的自定义key
+                    在被监控的配置文档，或配置目录文件里添加一行
+                        UserParameter=memory.used[*],free -m | awk '/^$1/{print $$3}'    调用运行命令中内站的位置变量需要再加个$
+                      在服务器端使用 zabbix_get -s 192.168.3.11 -p 10050 -k "memory.used[Mem]" 可以测试   后面给定参数就能显示出对应的值   
+
+                    如果在zabbix上使用自定义的key 需要在hosts - items  里添加新监控项， 在key里填上 memory.used[Mem] 的值就行 [] 括号里填上给出的键名
+
+            使用nginx进行php的反代，然后查看php的状态信息
+                首先    
+                    
+
+
+
+                                 
+
+
+
+
+      snmp的监控：
+          被监控方安装 set-snmp包     安装后启动 systemctl start snmpd.service
+          主监控方安装 set-snmp-utils      安装好后启动 systemctl start snmptrapd.service      
+
+      jmx的监控：
+          zabbix服务端需要安装个专门的服务包来监控jmx主机
+              zabbix-java-gateway
+
+
+
+
+
+
+
+windows ：
+     先安装windows 的 agent包  
+
+      2.安装过程
+ 1) 将zabbix文件夹解压后放在C：\ 
+ 2) C:\zabbix\下 新建一个zabbix_agent.log文件
+ 3) 配置zabbix_agentd.win.conf文件（位于C:\zabbix\conf\），需要修改的地方分别为：
+ Logfile= C:\zabbix\zabbix_agent.log
+        Server=X.X.X.X
+        Hostname=X.X.X.X
+ 注：
+ l Server是zabbix服务器的IP地址
+ l LogFile为zabbix_agentd.log文件的位置，用于记录事件，这里的zabbix_agentd.log填写你新建log文件的位置
+ l Hostname需要和服务器端配置主机填入的主机名称一致，不然日志中将会报“host{主机名}not found”的错误
+ 
+4) 打开CMD命令行，注意文件路径执行：
+ C:\zabbix\bin\win32\zabbix_agentd.exe -c C:\zabbix\conf\zabbix_agentd.win.conf -i
+ C:\zabbix\bin\win32\zabbix_agentd.exe -c C:\zabbix\conf\zabbix_agentd.win.conf -s
+ 5) 在"运行"输入 "services.msc"，在里面找到"ZABBIX AGENT"，并启动服务。 到windows的系统服务列表里面查看ZabbixAgent的状态，正常情况下会看到ZabbixAgent已经存在在系统服务里，而且是自动启动，安装Agent并注册服务,
+
+网上抄的！
+
+6) 配置命令
+ l C:\zabbix\bin\win32\zabbix_agentd -c C:\zabbix\conf\zabbix_agentd.win.conf -i
+ -c ：指定配置文件所有位置
+ -i ：安装客户端
+ -s ：启动客户端
+ -x ：停止客户端
+ -d ：卸载客户端
+ 
+7)确认zabbix/conf/zabbix_agentd.win.conf文件关于网卡参数设定
+ 在客户端获取网卡参数列表:
+ typeperf -qx | find "Network Interface" | find "Bytes" 
+ 确认以下内容：
+ ### Option:Network
+ PerfCounter=NetIn,"\NetworkInterface(Red Hat VirtIO Ethernet Adapter)\Bytes Received/sec",15
+ PerfCounter=NetOut,"\Network Interface(Red Hat VirtIO Ethernet Adapter)\Bytes Sent/sec",15
+ PerfCounter=NetTotal,"\Network Interface(Red Hat VirtIO Ethernet Adapter)\Bytes Total/sec",15
+ 其中""部分取自于上图中的网卡参数，NetIn，NetOut和NetTotal是在Zabbix中配置时的Key。
+ 最后的15是指取值时间，单位为“秒”
+ 
+8)运行安装和启动命令
+ 64位
+ C:\zabbix\bin\win64\zabbix_agentd.exe -c C:\zabbix\conf\zabbix_agentd.win.conf -i
+ C:\zabbix\bin\win64\zabbix_agentd.exe -c C:\zabbix\conf\zabbix_agentd.win.conf -s
+ 32位
+ C:\zabbix\bin\win32\zabbix_agentd.exe -c C:\zabbix\conf\zabbix_agentd.win.conf -i
+ C:\zabbix\bin\win32\zabbix_agentd.exe -c C:\zabbix\conf\zabbix_agentd.win.conf -s
+ 帮助
+ C:\zabbix\bin\win32\zabbix_agentd.exe -c C:\zabbix\conf\zabbix_agentd.win.conf -h

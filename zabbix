@@ -157,7 +157,8 @@
                     innodb_file_per_table = ON
                     innodb_buffer_pool_size = 256
                     max_connections = 200
-
+                
+	        启动 systemctl start mariadb.service
                 然后初使化下mysql 配置 mysql_secure_installation    
             
             3.  [root@zabbix ~]# yum install zabbix-server-mysql zabbix-web zabbix-web-mysql zabbix-agent zabbix-get zabbix-sender

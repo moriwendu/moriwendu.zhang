@@ -4,11 +4,23 @@
 
     采集（采样）：主机
         系统指标：CPU , MEMORY , IO(Disk,Network)
+	     CPU: sys, usr, idle, ...
+	     Memory: total, used, free, cached, buffer,shm,...
+	     IO: disk, network, ...
+        业务指标： 如nginx,redis... 等等的服务     tps,qps    
+	     TPS： 每秒的事务数
+	     QPS： 每秒的查询数
 
-	    SNMP,   server/agent
+	    SNMP -- Simple Network Management Protocol   版本有v1 v2 v3版 
+	    server/agent
 	    IPMI 硬件级数据采集
 	    jmx : 获取到使用内部资源数据  
-
+	    
+    监控工具的数据存储：
+        Cacti  是一个很好的展示系统。使用的是rrd的控控数据 round-robin database 把数据存储在一个类似于圆形的储存空间内，在内放置各个点的槽，一旦数据满了进行覆盖存储。
+	Nagios 没有使用存储系统，但它的告警系统很完善
+        Zabbix 使用NoSQL influxdb 进行时序数据库进行监控使用
+	
         Agentless Monitoring
         Web Monitoring
         Database Monitoring
@@ -54,6 +66,10 @@
                 graphite+grafana
 
                 LTS:长期维护版
+
+        zabbix建意部署时的划分： zabbix-server zabbix_get 为一台服务器
+	                        zabbix-web-gui apache php 为一台服务器
+				zabbix database 为一台服务器
 
 
         Zabbix

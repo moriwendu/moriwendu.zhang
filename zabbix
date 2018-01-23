@@ -172,7 +172,7 @@
                     skip_name_resolve = ON
                     innodb_file_per_table = ON
                     innodb_buffer_pool_size = 256
-                    max_connections = 200
+                    max_connections = 2000
                 
 	        启动 systemctl start mariadb.service
                 然后初使化下mysql 配置 mysql_secure_installation    

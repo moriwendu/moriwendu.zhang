@@ -248,6 +248,36 @@
                       账号：admin
                       密码：zabbix
             
+	    [root@zabbix zabbix]# yum install zabbix_agentd
+	    [root@zabbix zabbix]# grep -i "^####" zabbix_agentd.conf
+	    ############ GENERAL PARAMETERS ############
+	    ##### Passive checks related      被动
+	    ##### Active checks related       主动
+	    ############ ADVANCED PARAMETERS ############
+	    ####### USER-DEFINED MONITORED PARAMETERS ########   *这项是用户自定义的监控项  重点。
+	    ####### LOADABLE MODULES #######
+	    ####### TLS-RELATED PARAMETERS #######
+	    
+	    [root@zabbix zabbix]# grep -i "^####" zabbix_agentd.conf
+	    ############ GENERAL PARAMETERS ############
+	    ##### Passive checks related      ----被动
+	    ### Option: Server                    ----服务器
+	    ### Option: ListenPort                ----被监控的端口
+	    ### Option: ListenIP                  ----被监控的IP
+	    ### Option: StartAgents               ----被监控的代理
+	    ##### Active checks related       ----主动	 
+	    ### Option: ServerActive              ----服务器
+	    ### Option: Hostname                  ----向服务器申报的本地被监控的名称
+	    ### Option: Hostmetadata              ----
+	    ### Option: HstmetadataItem           ----
+	    ### Option: RefreshActivechecks       ----多久重新刷新一次
+	    ### Option: BufferSend                ----缓冲发送
+	    ### Option: BufferSize                ----缓冲大小
+	    ### Option: MaxLinesPerSecond
+	     
+	    
+	    
+	    
         添加监控主机步骤：
             
             1.  ntpdata 172.18.0.1

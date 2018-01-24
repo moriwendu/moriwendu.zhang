@@ -117,9 +117,9 @@
                         文本
 
                 存储的值:
-                    As is :
-                    Delta :
-                    Delta : 
+                    As is :    不对数据做任何处理
+                    Delta （simple change):  本次采样减去前一次采样的值的结果   
+                    Delta (speed per second): 本次采样减去上一次采样的值，再除以经过的时长;
 
             trigger:
                 界定某特定的item采集到的数据的非合理区间或非合理状态：逻辑表达式
@@ -275,7 +275,23 @@
 	    ### Option: BufferSize                ----缓冲大小
 	    ### Option: MaxLinesPerSecond
 	     
-	    
+	zabbix的数据采集key：
+	    zabbix-get -s 192.168.3.10 -p 10050 -k 'key'
+	zabbix的数据采集key：
+	    如采集zabbix自带的内建key  
+	        net.if.in[if,<mode>]
+		      中括号内的if表示的是网卡名称，mode表示的是模式 
+		      例：
+		       
+		      net.if.in[eno16777736.packets]  网卡eno16777736的入站报文数   
+        zabbix的数据采集key的trigger 
+	              {192.168.3.10:net.if.in[eno16777736.packets].last(0)}>100
+		      对last函数来说，last(0)相当于last(#1) last(#1）表示最近一次 last(#2)表示最近二次
+		      {192.168.3.10:net.if.in[eno16777736.packets].last(#3)}>100
+		          采样的网卡进入包最近3次的平均值>100将触发 trigger
+			  
+	Triggers 的 Dependencies (依赖关系）
+	              依赖关系解决的是当一台物理机自身出现问题，其它的项就可以不用报警了
 	    
 	    
         添加监控主机步骤：

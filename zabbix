@@ -284,6 +284,10 @@
 		      例：
 		       
 		      net.if.in[eno16777736.packets]  网卡eno16777736的入站报文数   
+		      
+	     当设置一个监控项时如 key net.tcp.service[redis,192.168.3.10,6379] 它的值是0和1 即1为正常0为不正常
+	         这时我们定义的show value 的值就不要是As is 了  这里我们可以把它设置为service state
+	     
         zabbix的数据采集key的trigger 
 	              {192.168.3.10:net.if.in[eno16777736.packets].last(0)}>100
 		      对last函数来说，last(0)相当于last(#1) last(#1）表示最近一次 last(#2)表示最近二次
@@ -292,8 +296,53 @@
 			  
 	Triggers 的 Dependencies (依赖关系）
 	              依赖关系解决的是当一台物理机自身出现问题，其它的项就可以不用报警了
-	    
-	    
+		      
+	Actions 的条件设定
+	       condition  自定义有一条A 为 不在调试的工作范围时间内 Maintenance status not in maintenance  
+	      
+	      
+	      例：
+	          Item:
+		       Name: redis status
+	               Type: Zabbix agent
+		       Key : net.tcp.listen[6379]
+		       Host interface: 192.168.3.10:10050
+		       Show value: service state
+		  
+		  Trigger:
+		       Name: redis status down
+		         add添加
+			   Item: redis status
+			   Function: Last(most recent) T value is = N 
+		           Last of (T) 3  Count
+			   N = 3
+		  Action:
+		       Name: redis service unavailable
+		       Conditions:  A  Maintenance status not in maintenance    
+	                             B  Trigger  =  redis service down
+		     operations:   
+		       Default operation step duration:   5m
+	                NEW添加
+			  Steps : 1-1 
+			  Operation type : Remote command
+			  type : Custom script
+			  Execute on : Zabbix agent
+			      sudo /usr/bin/systemctl restart redis.service
+			    **满足sudo执行远程命令得启用一些配置
+			    visudo  添加一行 zabbix ALL=(ALL)  NOPASSWD: ALL    让zabbix有权限执行命令
+			        并在visudo里找到一行 Defaults requitetty 注释掉或者添加zabbix有权限
+			    配置/etc/zabbix.comf  配置文件  找到EnableRemoteCommands 把值改为1 并取消注释
+			        在zabbix.conf里找到LogRemoteCommands 把值改为1 并取消注释，这将会记录zabbix运行的远程命令 
+				
+		    Media types: 
+		        Media type : 
+			      Name: 自定义脚本
+			      Type: Script
+			      Script name:  要启用的脚本名称     （这个脚本需要放置在Zabbix服务器的/usr/lib/zabbix/alertscripts 这
+			                                          个目录是专门放置告警脚本）
+			  
+			  
+			  
         添加监控主机步骤：
             
             1.  ntpdata 172.18.0.1

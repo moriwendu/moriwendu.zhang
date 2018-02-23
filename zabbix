@@ -354,7 +354,12 @@
 	                                  Type: Zabbix agent
 					   Key: memory.used
 					   ...
-	
+	   *修改了UserParameters之后是需要重启服务的
+	   
+	    UserParameter=memory.stats[*],free | awk '/^$1/{print $$2}'      正常情况下$1是表示跟的参数$2是跟的参数2 如果要打印出AWK抓出的
+	                                                                     数据，需要使用$$
+	    
+	    [root@server ~]# zabbix_get -s 192.168.3.10 -p 10050 -k "memory.stats[Memtotal]"  可以使用命令测试
 	
 	
 	

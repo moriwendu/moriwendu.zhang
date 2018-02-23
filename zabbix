@@ -340,6 +340,24 @@
 			      Type: Script
 			      Script name:  要启用的脚本名称     （这个脚本需要放置在Zabbix服务器的/usr/lib/zabbix/alertscripts 这
 			                                          个目录是专门放置告警脚本）
+								  
+
+    自定义Key： User Parameters
+        syntax: UserParameter=<key>,<command>  可以编辑/etc/zabbix/zabbix_agentd.conf文件，也可以编辑/etc/zabbix/zabbix_agentd.d/ 下
+	编辑个*.conf的文件
+	  如： memory.conf
+	    UserParameter=memory.used,free | awk '/^Mem/{print $2}'
+	    
+	    [root@server ~]# zabbix_get -s 192.168.3.10 -p 10050 -k "memory.used"  可以使用命令测试
+	    
+	    在item添加监控项时可以直接添加： name: Memory Used
+	                                  Type: Zabbix agent
+					   Key: memory.used
+					   ...
+	
+	
+	
+	
 			  
 	      自定义Graphs 
 	            

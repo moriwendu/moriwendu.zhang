@@ -410,7 +410,34 @@
 	 access  notConfigGroup ""     any       noauth     exact     systemview   none  none
 	 
     proxy:
-        代理端需要安装 ： yum install zabbix-proxy-mysql zabbix-get zabbix-agent zabbix-sender
+        (zabbix-proxy代理服务器）代理端需要安装 ： yum install zabbix-proxy-mysql zabbix-get zabbix-agent zabbix-sender
+	    cp /usr/share/doc/zabbix-proxy-mysql-3.x.x/schema.sql.gz .
+	    gzip -d schema.sql.gz
+	    mysql -uzabbixproxyuser -hx.x.x.x -pzabbixproxypass zabbixproxydb < schema.sql.gz
+	    
+	    cp /etc/zabbix/zabbix_proxy.conf{,.bak} && vim /etc/zabbix/zabbix_proxy.conf
+	        server=x.x.x.x
+		serverport=10051
+		hostname=zabbix_proxy_1 或 x.x.x.x 的IP   (主机名的话要可以解析）
+		DBhost=x.x.x.x
+		DBname=zabbixproxydb
+		DBuser=zabbixproxyuser
+		DBpassword=zabbixproxypass
+		configfrequency=30    (这项刚建立起配置时可以调短点，之后稳定了可以调长点3600）
+		
+	 (主zabbix服务器）主zabbix服务器上，在Administration里 proxies 里 create proxy
+	  ****添加的create proxy 的名称得和配置文件zabbix_proxy.conf 里的hostname 一致
+	   添加完成后如果想要监控的主机是proxy来监控 
+	       hosts  -- create host  ----  下列的proxy里选择代理服务器
+	       
+	  (被监控主机agentd)****任何一个要被监控的主机要想被代理监控，得配置zabbix-agentd.conf文件****
+	       修改 server=x.x.x.x,x.x.x.x    (这里的两个IP一个是主ZABBIX监控IP一个是代理IP)
+	            serverActive=x.x.x.x,x.x.x.x
+	   
+	
+	
+	    配置完成后systemctl start zabbix-proxy
+		
 			  
 	      自定义Graphs 
 	            

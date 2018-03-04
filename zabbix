@@ -409,7 +409,8 @@
 	 #    group            context    sec.model  sec.level    prefix     read      write    notif      -->授权SNMP可以使用的权限
 	 access  notConfigGroup ""     any       noauth     exact     systemview   none  none
 	 
-	
+    proxy:
+        代理端需要安装 ： yum install zabbix-proxy-mysql zabbix-get zabbix-agent zabbix-sender
 			  
 	      自定义Graphs 
 	            

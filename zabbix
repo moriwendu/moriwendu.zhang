@@ -437,7 +437,36 @@
 	
 	
 	    配置完成后systemctl start zabbix-proxy
+
+ zabbix服务器的调优：
+       Database:
+               1.历史数据不要保存太长时长;
+	       2.尽量让数据缓存在数据库服务器的内存中;
+       触发器表达式：减少使用min(),max(),avg();尽量使用last(),nodata();
+       数据收集：polling较慢（减少使用SNMP/agentless/agent);尽量使用trapping (agent(active));
+       数据类型：文本型数据处理速度较慢；尽量少收集类型 为text或string类型的数据;多使用类型为numeric的;
+       
+       zabbix服务器的进程：
+           （1）服务器组件的数量; vim /etc/zabbix/zabbix-server.conf
+	        alerter,discoverer,escalator,http poller,hourekeeper,icmp pinger, ipmi poller,poller,traper,
+		configration syncer,...
+		StartPollers=60
+		StartPingers=10
+		...
+		StartDBSyncer=5
+		...
+	    (2) 设定合理的缓存大小
+	        Cachesize,HistoryCachesize,HistoryIndexCachesize,TrendCacheSize ...
 		
+            (3) 数据库优化：    (可以上github上搜下zabbix数据划分的脚本做数据库分表操作zabbix database partitioning） 
+	        分表：
+		    history_*    历史数据
+		    trends*      起始数据
+		    events*      事件数据
+		    
+
+
+
 			  
 	      自定义Graphs 
 	            

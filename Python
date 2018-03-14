@@ -1,0 +1,13 @@
+php,perl,python,java 编程语言;
+    脚本编程语言；
+    
+    source code --> compile --> bytecode --> pvm
+    
+python2 <--> python3
+    过程式编程：以指令为中心，数据服务于指令需要；
+    对象式编程：以数据为中心（对象），指令服务于数据；
+
+
+
+动态类型的编程语言：
+    变量：

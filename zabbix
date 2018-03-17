@@ -360,6 +360,15 @@
 	                                                                     数据，需要使用$$
 	    
 	    [root@server ~]# zabbix_get -s 192.168.3.10 -p 10050 -k "memory.stats[Memtotal]"  可以使用命令测试
+	    
+    zabbix 可以向远程主机执行命令操作：
+           #visudo
+	      zabbix    ALL=(ALL)    ALL
+	      #Defaults    requiretty              --把这项注释掉
+	   #vim /etc/zabbix/zabbix-agentd.conf
+	      EnableRemoteCommands=1               --这项是开启远程命令
+	      LogRemoteCommands=1                  --这项是记录到日志里
+	    
 	
     SNMP:
         TCP/IP

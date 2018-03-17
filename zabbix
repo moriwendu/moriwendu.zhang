@@ -378,6 +378,10 @@
 	
 	SNMP        161端口
 	SNMP-trap   162端口
+	    启动trap
+	        1.被监控端起用snmpd.service 
+		2.主控端启用snmptrapd.service    --这个服务在net-snmp这个包里 /etc/snmp/snmptrapd.conf    是它的配置文件
+		  
 	
 	 Linux的SNMP包需要安装net-snmp （被管控端的软件） 这个包里有个snmptrapd 服务程序是用来做管控端收集被管控端监控数据的
 	                     net-snmp-utils （是管控端的软件）
